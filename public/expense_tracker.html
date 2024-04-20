@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Expense Tracker</title>
+</head>
+<body>
+  <header>
+    <h1>Expense Tracker</h1>
+  </header>
+
+  <main>
+    <section id="expense-form">
+      <h2>Add New Expense</h2>
+      <form id="add-expense-form" action="/api/expenses" method="POST">
+        <label for="expense-description">Description:</label>
+        <input type="text" id="expense-description" name="description" required><br><br>
+        <label for="expense-amount">Amount:</label>
+        <input type="number" id="expense-amount" name="amount" required><br><br>
+        <button type="submit">Add Expense</button>
+      </form>      
+    </section>
+
+    <section id="expenses-list">
+      <h2>Expense List</h2>
+      <ul id="expenses"></ul>
+    </section>
+  </main>
+
+  
+<script>
+  // fetch and render expenses
+  async function fetchAndRenderExpenses() {
+    try {
+      const response = await fetch('/api/expenses');
+      const expenses = await response.json();
+
+      const expensesList = document.getElementById('expenses');
+      expensesList.innerHTML = ''; // clear previous expenses
+
+      expenses.forEach(expense => {
+        const li = document.createElement('li');
+        li.textContent = `Description: ${expense.description}, Amount: $${expense.amount}`;
+
+        const deleteButton = document.createElement('button');
+      deleteButton.textContent = 'Delete';
+      deleteButton.addEventListener('click', () => deleteExpense(expense._id)); // expense id for delete button
+      li.appendChild(deleteButton);
+
+        expensesList.appendChild(li);
+      });
+    } catch (error) {
+      console.error('Error fetching expenses:', error);
+    }
+  }
+
+  //delete expenses
+  async function deleteExpense(expenseId) {
+  try {
+    const response = await fetch(`/api/expenses/${expenseId}`, {
+      method: 'DELETE'
+    });
+
+    if (response.ok) {
+      console.log('Expense deleted successfully');
+      // after deleting expense, fetch remaining expenses.
+      fetchAndRenderExpenses();
+    } else {
+      console.error('Failed to delete expense:', response.statusText);
+    }
+  } catch (error) {
+    console.error('Error deleting expense:', error);
+  }
+}
+
+async function handleAddExpenseFormSubmit(event) {
+  event.preventDefault(); // Prevent the default form submission behavior
+
+  const form = event.target;
+  const formData = {
+    description: form.querySelector('#expense-description').value,
+    amount: form.querySelector('#expense-amount').value
+  };
+
+  try {
+    const response = await fetch('/api/expenses', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json' // Set the content type to JSON
+      },
+      body: JSON.stringify(formData) // Convert formData to JSON string
+    });
+
+    if (response.ok) {
+      const newExpense = await response.json();
+      console.log('Expense created successfully:', newExpense);
+      fetchAndRenderExpenses();
+      form.reset(); // Reset the form after successful submission
+    } else {
+      console.error('Failed to create expense:', response.statusText);
+    }
+  } catch (error) {
+    console.error('Error creating expense:', error);
+  }
+}
+
+  // show expenses on load.
+  window.onload = fetchAndRenderExpenses;
+
+  // form submission event listener
+  const addExpenseForm = document.getElementById('add-expense-form');
+  addExpenseForm.addEventListener('submit', handleAddExpenseFormSubmit);
+
+</script>
+</body>
+
+</html>

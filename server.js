@@ -187,7 +187,7 @@ app.delete('/api/expenses/:id', async (req, res) => {
 
 
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 app.get('/signup', (req, res) => {
